@@ -22,6 +22,11 @@ class Customer(object):
         self.ipv6 = []
         custdict[self.vid] = self
 
+    def __repr__(self):
+        return '<%s vid=%d, proxyif=%r, privnet=%r, extranets=%r, proxyips=%r, ipv6=%r>' % (
+                self.__class__.__name__, self.vid, self.proxyif, self.privnet, self.extranets,
+                self.proxyips, self.ipv6)
+
     def iter_nets(self):
         if self.privnet:
             yield self.privnet
@@ -60,6 +65,11 @@ class Subnet4(object):
                 self.name = '%d-%d' % (vid, len(customer.extranets) + 2)
             customer.extranets.append(self)
 
+    def __repr__(self):
+        return '<%s ip=%s rtrip=%r gw=%r name=%s>' % (
+                self.__class__.__name__, self.ip, self.rtrip,
+                self.gw, repr(self.name) if hasattr(self, 'name') else 'N/A')
+
     def anyrtrip(self):
         for k, v in self.rtrip.items():
             if v is not None:
@@ -77,6 +87,9 @@ class Subnet6(object):
         self.customer = customer = custdict[vid]
         self.gw = dictentry.get('gw', None)
         customer.ipv6.append(self)
+
+    def __repr__(self):
+        return '<%s ip=%s gw=%r>' % (self.__class__.__name__, self.ip, self.gw)
 
 ##############################################################################
 
