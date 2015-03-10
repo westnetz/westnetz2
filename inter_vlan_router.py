@@ -103,6 +103,10 @@ class IntervlanRouter(object):
                         'type','vlan','id',str(self.vid(iface))])
             check_call(['ip','link','set',iface,'up'])
 
+        for iface in new_interfaces:
+            self.set_file('/proc/sys/net/ipv4/conf/%s/rp_filter' % iface, '1')
+            self.set_file('/proc/sys/net/ipv4/conf/%s/arp_ignore' % iface, '1')
+
     def configure_ipv4_addresses(self):
         """Add/Delete ipv4 addresses"""
         for c in self.customers:
@@ -165,7 +169,22 @@ class IntervlanRouter(object):
 
     def configure_ipv6_addresses(self):
         """Add/delete IPv6 addresses on the routers"""
-        # TODO: still needs to be implemented
+        for c in self.customers:
+            iface = self.iface(c.vid)
+
+            current_ips = set(self.get_addresses(iface, 'ipv6'))
+            if c.ipv6:
+                new_ips = set([
+                    'fe80::1/64',
+                    '2a02:238:f02a:ffff:1:%d::/128' % c.vid # XXX: MAGIC
+                ])
+            else:
+                new_ips = set()
+
+            for ip in current_ips - new_ips:
+                check_call(['ip','addr','del',ip,'dev',iface])
+            for ip in new_ips - current_ips:
+                check_call(['ip','addr','add',ip,'dev',iface])
 
     def configure_ipv6_routes(self):
         """Enable/Disable IPv6 forwarding, add/delete IPv6 routes"""
