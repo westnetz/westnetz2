@@ -1,4 +1,3 @@
-- integration into whole system (create namespaces and internamespace plumbing)
-- iptables rules (nat/firewall)
-- ipv6 addresses
 - bridge QoS
+- DHCP
+- router advertisements

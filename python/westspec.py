@@ -98,7 +98,7 @@ def setup(toolname):
     argp.add_argument('--spec', type = str)
     return argp
 
-def load(argp, specdeffd = lambda: sys.stdin):
+def load(argp, specdeffd = lambda: open('westnetz.json', 'r')):
     global args
 
     args = argp.parse_args()

@@ -105,7 +105,6 @@ class IntervlanRouter(object):
 
         for iface in new_interfaces:
             self.set_file('/proc/sys/net/ipv4/conf/%s/rp_filter' % iface, '1')
-            self.set_file('/proc/sys/net/ipv4/conf/%s/arp_ignore' % iface, '1')
 
     def configure_ipv4_addresses(self):
         """Add/Delete ipv4 addresses"""
@@ -161,11 +160,47 @@ class IntervlanRouter(object):
                 check_call(cmd)
 
     def configure_ipv4_proxyarp(self):
-        """Enable/Disable per IF proxyarp towards customers"""
+        """Enable/Disable per IF proxyarp towards customers
+           and configure arptables accordingly."""
+        filename = '/tmp/router-%s-arptables.conf' % ('public' if self.public else 'private')
+        try:
+            with open(filename, 'r') as current_file:
+                current_content = current_file.read()
+        except IOError, e:
+            if e.errno == errno.ENOENT:
+                current_content = ''
+            else:
+                raise
+
+        new_content = '*filter\n'
+        new_content += ':INPUT ACCEPT\n'
+        new_content += ':OUTPUT ACCEPT\n'
+        new_content += ':FORWARD ACCEPT\n'
+
         for c in self.customers:
             iface = self.iface(c.vid)
-            self.set_file('/proc/sys/net/ipv4/conf/%s/proxy_arp' % iface, '1' if c.proxyif else '0')
-            self.set_file('/proc/sys/net/ipv4/neigh/%s/proxy_delay' % iface, '0') # TODO: is 0 the correct value?
+            self.set_file('/proc/sys/net/ipv4/conf/%s/proxy_arp' % iface, '1' if c.proxyif and self.public else '0')
+            self.set_file('/proc/sys/net/ipv4/neigh/%s/proxy_delay' % iface, '0')
+            # Proxyarp only works with arp_ignore == 0
+            self.set_file('/proc/sys/net/ipv4/conf/%s/arp_ignore' % iface, '0' if c.proxyif and self.public else '1')
+
+            if self.public and c.proxyips:
+                for pi in c.proxyips:
+                    if pi.ip.startswith('85.239.127.'):
+                        arp_source = '85.239.127.193'
+                    elif pi.ip.startswith('146.0.105.'):
+                        arp_source = '146.0.105.65'
+                    else:
+                        raise Exception("Unknown proxyarp IP range %s" % pi.ip)
+                    new_content += '-A OUTPUT -j mangle -d %s --opcode 1 --mangle-ip-s %s\n' % (
+                                    pi.ip, arp_source)
+
+        new_content += '\n'
+        if current_content != new_content:
+            if not dry_run:
+                with open(filename, 'w') as new_file:
+                    new_file.write(new_content)
+            check_call('arptables-restore < %s' % filename, shell=True)
 
     def configure_ipv6_addresses(self):
         """Add/delete IPv6 addresses on the routers"""
@@ -173,7 +208,7 @@ class IntervlanRouter(object):
             iface = self.iface(c.vid)
 
             current_ips = set(self.get_addresses(iface, 'ipv6'))
-            if c.ipv6:
+            if c.ipv6 and self.public:
                 new_ips = set([
                     'fe80::1/64',
                     '2a02:238:f02a:ffff:1:%d::/128' % c.vid # XXX: MAGIC
@@ -192,8 +227,8 @@ class IntervlanRouter(object):
             iface  = self.iface(c.vid)
 
             # Enable/Disable IPv6
-            self.set_file('/proc/sys/net/ipv6/conf/%s/forwarding' % iface, '1' if c.ipv6 else '0')
-            self.set_file('/proc/sys/net/ipv6/conf/%s/disable_ipv6' % iface, '0' if c.ipv6 else '1')
+            self.set_file('/proc/sys/net/ipv6/conf/%s/forwarding' % iface, '1' if c.ipv6 and self.public else '0')
+            self.set_file('/proc/sys/net/ipv6/conf/%s/disable_ipv6' % iface, '0' if c.ipv6 and self.public else '1')
 
             # Update Routes
             current_routes = set(self.get_routes(iface, 'ipv6'))
