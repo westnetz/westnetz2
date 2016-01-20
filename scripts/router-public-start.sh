@@ -41,34 +41,47 @@ ip6tables -t raw -I PREROUTING -j NOTRACK
 
 # Setup the WAN interface
 ip link set ${RTR_PUBLIC_UPLINK} up
-for ${IP} in ${RTR_PUBLIC_UPLINK_ONLINK_IPV4}; do
-	ip -4 route add ${IP} dev ${RTR_PUBLIC_UPLINK}
-done
-for ${IP} in ${RTR_PUBLIC_UPLINK_ONLINK_IPV6}; do
-	ip -6 route add ${IP} dev ${RTR_PUBLIC_UPLINK}
-done
+if [ -n "${RTR_PUBLIC_UPLINK_ONLINK_IPV4}" ]; then
+	for IP in ${RTR_PUBLIC_UPLINK_ONLINK_IPV4}; do
+		ip -4 route add ${IP} dev ${RTR_PUBLIC_UPLINK}
+	done
+fi
+if [ -n "${RTR_PUBLIC_UPLINK_ONLINK_IPV6}" ]; then
+	for IP in ${RTR_PUBLIC_UPLINK_ONLINK_IPV6}; do
+		ip -6 route add ${IP} dev ${RTR_PUBLIC_UPLINK}
+	done
+fi
 
 if [ -n "${RTR_PUBLIC_UPLINK_PROXY_IPV6}" ]; then
 	echo 1 > /proc/sys/net/ipv6/conf/${RTR_PUBLIC_UPLINK}/proxy_ndp
 	echo 0 > /proc/sys/net/ipv6/neigh/${RTR_PUBLIC_UPLINK}/proxy_delay
+
+	for IP in ${RTR_PUBLIC_UPLINK_PROXY_IPV6}; do
+		# XXX: Do we need a route?
+		ip -6 neigh add proxy ${IP} dev ${RTR_PUBLIC_UPLINK}
+	done
 fi
-for ${IP} in ${RTR_PUBLIC_UPLINK_PROXY_IPV6}; do
-	# XXX: Do we need a route?
-	ip -6 neigh add proxy ${IP} dev ${RTR_PUBLIC_UPLINK}
-done
+
 if [ -n "${RTR_PUBLIC_UPLINK_PROXY_IPV4}" ]; then
 	echo 1 > /proc/sys/net/ipv4/conf/${RTR_PUBLIC_CGN_DOWNLINK}/proxy_arp
 	echo 0 > /proc/sys/net/ipv4/neigh/${RTR_PUBLIC_CGN_DOWNLINK}/proxy_delay
+
+	for IP in ${RTR_PUBLIC_UPLINK_PROXY_IPV4}; do
+		ip neigh add proxy ${IP} dev ${RTR_PUBLIC_UPLINK}
+	done
 fi
-for IP in ${RTR_PUBLIC_UPLINK_PROXY_IPV4}; do
-	ip neigh add proxy ${IP} dev ${RTR_PUBLIC_UPLINK}
-done
-for ${IP} in ${RTR_PUBLIC_UPLINK_OWN_IPV4}; do
-	ip -4 addr add ${IP} dev ${RTR_PUBLIC_UPLINK}
-done
-for ${IP} in ${RTR_PUBLIC_UPLINK_OWN_IPV6}; do
-	ip -6 addr add ${IP} dev ${RTR_PUBLIC_UPLINK}
-done
+
+if [ -n "${RTR_PUBLIC_UPLINK_OWN_IPV4}" ]; then
+	for IP in ${RTR_PUBLIC_UPLINK_OWN_IPV4}; do
+		ip -4 addr add ${IP} dev ${RTR_PUBLIC_UPLINK}
+	done
+fi
+
+if [ -n "${RTR_PUBLIC_UPLINK_OWN_IPV6}" ]; then
+	for IP in ${RTR_PUBLIC_UPLINK_OWN_IPV6}; do
+		ip -6 addr add ${IP} dev ${RTR_PUBLIC_UPLINK}
+	done
+fi
 
 ip -4 route add default via ${RTR_PUBLIC_UPLINK_GW_IPV4} dev ${RTR_PUBLIC_UPLINK}
 ip -6 route add default via ${RTR_PUBLIC_UPLINK_GW_IPV6} dev ${RTR_PUBLIC_UPLINK}

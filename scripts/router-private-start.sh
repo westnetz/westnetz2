@@ -27,7 +27,7 @@ echo 1 > /proc/sys/net/ipv6/conf/${RTR_PRIVATE_UPLINK}/disable_ipv6
 echo 0 > /proc/sys/net/ipv4/neigh/${RTR_PRIVATE_UPLINK}/proxy_delay
 ip route add ${RTR_PRIVATE_GATEWAY} dev ${RTR_PRIVATE_UPLINK}
 ip route add default via ${RTR_PRIVATE_GATEWAY}
-for ${IP} in ${RTR_PRIVATE_NAT_ALL} do
+for IP in ${RTR_PRIVATE_NAT_ALL} do
 	ip neigh add proxy ${IP} dev ${RTR_PRIVATE_UPLINK}
 	ip route add ${IP}/32 dev dummy-nat
 done
