@@ -48,14 +48,18 @@ for ${IP} in ${RTR_PUBLIC_UPLINK_ONLINK_IPV6}; do
 	ip -6 route add ${IP} dev ${RTR_PUBLIC_UPLINK}
 done
 
-echo 1 > /proc/sys/net/ipv6/conf/${RTR_PUBLIC_UPLINK}/proxy_ndp
-echo 0 > /proc/sys/net/ipv6/neigh/${RTR_PUBLIC_UPLINK}/proxy_delay
+if [ -n "${RTR_PUBLIC_UPLINK_PROXY_IPV6}" ]; then
+	echo 1 > /proc/sys/net/ipv6/conf/${RTR_PUBLIC_UPLINK}/proxy_ndp
+	echo 0 > /proc/sys/net/ipv6/neigh/${RTR_PUBLIC_UPLINK}/proxy_delay
+fi
 for ${IP} in ${RTR_PUBLIC_UPLINK_PROXY_IPV6}; do
 	# XXX: Do we need a route?
 	ip -6 neigh add proxy ${IP} dev ${RTR_PUBLIC_UPLINK}
 done
-echo 1 > /proc/sys/net/ipv4/conf/${RTR_PUBLIC_CGN_DOWNLINK}/proxy_arp
-echo 0 > /proc/sys/net/ipv4/neigh/${RTR_PUBLIC_CGN_DOWNLINK}/proxy_delay
+if [ -n "${RTR_PUBLIC_UPLINK_PROXY_IPV4}" ]; then
+	echo 1 > /proc/sys/net/ipv4/conf/${RTR_PUBLIC_CGN_DOWNLINK}/proxy_arp
+	echo 0 > /proc/sys/net/ipv4/neigh/${RTR_PUBLIC_CGN_DOWNLINK}/proxy_delay
+fi
 for IP in ${RTR_PUBLIC_UPLINK_PROXY_IPV4}; do
 	ip neigh add proxy ${IP} dev ${RTR_PUBLIC_UPLINK}
 done
