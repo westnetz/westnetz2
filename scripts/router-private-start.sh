@@ -16,6 +16,7 @@ echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
 
 # General network setup
 ip link set lo up
+# XXX: MAGIC
 ip addr add 146.0.105.112/32 dev lo # TODO: maybe use dedicated IP for loopback;
                                     # IP is needed as ARP-source towards router-pub
                                     # and as ICMP-Error source
@@ -26,6 +27,7 @@ ip link add dummy-nat type dummy
 ip link set dummy-nat up
 echo 1 > /proc/sys/net/ipv6/conf/${WAN_DEVICE}/disable_ipv6
 echo 0 > /proc/sys/net/ipv4/neigh/${WAN_DEVICE}/proxy_delay
+# XXX: MAGIC
 ip route add 146.0.105.65 dev ${WAN_DEVICE}
 ip route add default via 146.0.105.65
 for i in $(seq 112 119); do

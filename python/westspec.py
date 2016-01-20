@@ -34,6 +34,7 @@ class Customer(object):
             yield i
 
 class Subnet4(object):
+    # XXX: MAGIC
     rfcre = re.compile('^172\.19\.(\d+)\.0/24$')
 
     def __init__(self, ip, dictentry):
@@ -44,6 +45,7 @@ class Subnet4(object):
         self.customer = customer = custdict[vid]
         self.gw = dictentry.get('gw', None)
 
+        # XXX: MAGIC
         for rtr in ['cluster', 'router1', 'router2']:
             addrs = dictentry.get(rtr, [])
             if len(addrs) > 0:
@@ -59,6 +61,7 @@ class Subnet4(object):
             customer.proxyif = True
             customer.proxyips.append(self)
         else:
+            # XXX: MAGIC
             if len(customer.extranets) == 0 and vid >= 3000:
                 self.name = '%d' % (vid)
             else:

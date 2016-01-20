@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -e
+# XXX: MAGIC
 MAIN_DEVICE=eth0
 UPLINK_VLAN=1999
 

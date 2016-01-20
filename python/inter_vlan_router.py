@@ -184,8 +184,12 @@ class IntervlanRouter(object):
             # Proxyarp only works with arp_ignore == 0
             self.set_file('/proc/sys/net/ipv4/conf/%s/arp_ignore' % iface, '0' if c.proxyif and self.public else '1')
 
+            # Add an arptables entry that associates each customer public IP with a sensible source-ip to use for arp
+            # e.g. Fritz!boxes are very particular about what they expect here and won't answer arp-requests sourced
+            # from IPs they don't consider on-link
             if self.public and c.proxyips:
                 for pi in c.proxyips:
+                    # XXX: MAGIC
                     if pi.ip.startswith('85.239.127.'):
                         arp_source = '85.239.127.193'
                     elif pi.ip.startswith('146.0.105.'):
