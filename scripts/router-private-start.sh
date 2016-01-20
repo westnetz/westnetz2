@@ -67,4 +67,4 @@ ip link set ${RTR_PRIVATE_TRUNK} up
 echo 1 > /proc/sys/net/ipv6/conf/${RTR_PRIVATE_TRUNK}/disable_ipv6
 # And setup customer facing vlans
 cd "`dirname $0`"/../python
-${PYTHON} inter_vlan_router.py --mode private --iface ${RTR_PRIVATE_TRUNK} --apply
+${PYTHON} inter_vlan_router.py --mode private --iface ${RTR_PRIVATE_TRUNK} --apply --spec /etc/westnetz.json
