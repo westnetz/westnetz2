@@ -2,7 +2,7 @@
 
 set -e
 
-MAIN_DEVICE=eth0
+. "`dirname $0`"/settings
 
 ip netns del router-priv
 ip netns del router-pub

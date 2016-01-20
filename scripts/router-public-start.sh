@@ -2,11 +2,9 @@
 
 set -e
 
-# This script runs in the public router netns
+. "`dirname $0`"/../settings
 
-VLAN_DEVICE=veth-br
-WAN_DEVICE=vlan-uplink
-CGN_DEVICE=veth-priv
+# This script runs in the public router netns
 
 # General network preferences
 echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -19,10 +17,12 @@ echo 0 > /proc/sys/net/ipv6/conf/all/accept_ra
 
 # General network setup
 ip link set lo up
-# XXX: MAGIC
-ip addr add 85.239.127.193/32 dev lo
-ip addr add 146.0.105.65/32 dev lo
-ip addr add 2a02:238:f02a:ffff:1::/128 dev lo
+for IP in ${RTR_PUBLIC_LOOPBACK_IPV4}; do
+	ip -4 addr add ${IP}/32 dev lo
+done
+for IP in ${RTR_PUBLIC_LOOPBACK_IPV6}; do
+	ip -6 addr add ${IP}/128 dev lo
+done
 
 # Do not route bogon IP space
 ip route add unreachable 10.0.0.0/8
@@ -31,50 +31,49 @@ ip route add unreachable 192.168.0.0/16
 ip route add unreachable 100.64.0.0/10
 
 # Do not route our own IP space, unless we have a more specific
-# XXX: MAGIC
-ip route add unreachable 85.239.127.192/26
-ip route add unreachable 146.0.105.64/26
+for NET in ${RTR_PUBLIC_OWN_NETS}; do
+	ip route add unreachable ${NET}
+done
 
 # Don't do any connection tracking in the public IP router
 iptables -t raw -I PREROUTING -j NOTRACK
 ip6tables -t raw -I PREROUTING -j NOTRACK
 
 # Setup the WAN interface
-ip link set ${WAN_DEVICE} up
-# XXX: MAGIC
-ip route add 85.239.127.254 dev ${WAN_DEVICE}
-ip route add 146.0.105.126 dev ${WAN_DEVICE}
-ip route add 2a02:238:1:f02a::1 dev ${WAN_DEVICE}
-
-echo 1 > /proc/sys/net/ipv6/conf/${WAN_DEVICE}/proxy_ndp
-echo 0 > /proc/sys/net/ipv6/neigh/${WAN_DEVICE}/proxy_delay
-# XXX: MAGIC
-ip neigh add proxy 2a02:238:1:f02a::2 dev ${WAN_DEVICE}
-ip route add default via 146.0.105.126 dev ${WAN_DEVICE}
-ip route add default via 2a02:238:1:f02a::1 dev ${WAN_DEVICE}
-
-# XXX: MAGIC
-for i in $(seq 65 125); do
-	ip neigh add proxy 146.0.105.$i dev ${WAN_DEVICE}
+ip link set ${RTR_PUBLIC_UPLINK} up
+for ${IP} in ${RTR_PUBLIC_UPLINK_ONLINK_IPV4}; do
+	ip -4 route add ${IP} dev ${RTR_PUBLIC_UPLINK}
 done
-for i in $(seq 193 253); do
-	ip neigh add proxy 85.239.127.$i dev ${WAN_DEVICE}
+for ${IP} in ${RTR_PUBLIC_UPLINK_ONLINK_IPV6}; do
+	ip -6 route add ${IP} dev ${RTR_PUBLIC_UPLINK}
+done
+
+echo 1 > /proc/sys/net/ipv6/conf/${RTR_PUBLIC_UPLINK}/proxy_ndp
+echo 0 > /proc/sys/net/ipv6/neigh/${RTR_PUBLIC_UPLINK}/proxy_delay
+for ${IP} in ${RTR_PUBLIC_UPLINK_OWN_IPV6}; do
+	# XXX: Do we need a route?
+	ip -6 neigh add proxy ${IP} dev ${RTR_PUBLIC_UPLINK}
+done
+ip -4 route add default via ${RTR_PUBLIC_UPLINK_GW_IPV4} dev ${RTR_PUBLIC_UPLINK}
+ip -6 route add default via ${RTR_PUBLIC_UPLINK_GW_IPV6} dev ${RTR_PUBLIC_UPLINK}
+
+for IP in ${RTR_PUBLIC_UPLINK_OWN_IPV4}; do
+	ip neigh add proxy ${IP} dev ${RTR_PUBLIC_UPLINK}
 done
 
 # Setup the CGN interface
-ip link set ${CGN_DEVICE} up
-echo 1 > /proc/sys/net/ipv6/conf/${CGN_DEVICE}/disable_ipv6
-echo 1 > /proc/sys/net/ipv4/conf/${CGN_DEVICE}/proxy_arp
-echo 0 > /proc/sys/net/ipv4/neigh/${CGN_DEVICE}/proxy_delay
+ip link set ${RTR_PUBLIC_CGN_DOWNLINK} up
+echo 1 > /proc/sys/net/ipv6/conf/${RTR_PUBLIC_CGN_DOWNLINK}/disable_ipv6
+echo 1 > /proc/sys/net/ipv4/conf/${RTR_PUBLIC_CGN_DOWNLINK}/proxy_arp
+echo 0 > /proc/sys/net/ipv4/neigh/${RTR_PUBLIC_CGN_DOWNLINK}/proxy_delay
 
-# XXX: MAGIC
-for i in $(seq 112 119); do
-	ip route add 146.0.105.$i dev ${CGN_DEVICE}
+for IP in ${RTR_PRIVATE_NAT_ALL}; do
+	ip route add ${IP} dev ${RTR_PUBLIC_CGN_DOWNLINK}
 done
 
 # Make sure the vlan interface is up
-ip link set ${VLAN_DEVICE} up
-echo 1 > /proc/sys/net/ipv6/conf/${VLAN_DEVICE}/disable_ipv6
+ip link set ${RTR_PUBLIC_TRUNK} up
+echo 1 > /proc/sys/net/ipv6/conf/${RTR_PUBLIC_TRUNK}/disable_ipv6
 # And setup customer facing vlans
 cd "`dirname $0`"/../python
-python2 inter_vlan_router.py --mode public --iface ${VLAN_DEVICE} --apply
+${PYTHON} inter_vlan_router.py --mode public --iface ${RTR_PUBLIC_TRUNK} --apply

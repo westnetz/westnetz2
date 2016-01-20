@@ -215,7 +215,7 @@ class IntervlanRouter(object):
             if c.ipv6 and self.public:
                 new_ips = set([
                     'fe80::1/64',
-                    '2a02:238:f02a:ffff:1:%d::/128' % c.vid # XXX: MAGIC
+                    os.getenv('RTR_PUBLIC_IPV6_IF_TEMPLATE') % c.vid # XXX: MAGIC
                 ])
             else:
                 new_ips = set()

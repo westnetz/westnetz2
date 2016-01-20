@@ -1,0 +1,27 @@
+# This file is sourced by all shell scripts
+
+export PYTHON=python2
+
+export MAIN_DEVICE=eth0 # The device which is the stick to our switch that carries all VLANs
+export UPLINK_VLAN=1999 # The vlan which is used for the uplink
+
+export RTR_PUBLIC_UPLINK=vlan-uplink
+export RTR_PUBLIC_CGN_DOWNLINK=veth-priv
+export RTR_PUBLIC_TRUNK=veth-br
+export RTR_PUBLIC_LOOPBACK_IPV4="85.239.127.193 146.0.105.65"
+export RTR_PUBLIC_LOOPBACK_IPV6="2a02:238:f02a:ffff:1::"
+export RTR_PUBLIC_OWN_NETS="85.239.127.192/26 146.0.105.64/26"
+export RTR_PUBLIC_UPLINK_ONLINK_IPV4="85.239.127.254 146.0.105.126"
+export RTR_PUBLIC_UPLINK_ONLINK_IPV6="2a02:238:1:f02a::1"
+export RTR_PUBLIC_UPLINK_GW_IPV4="146.0.105.126"
+export RTR_PUBLIC_UPLINK_GW_IPV6="2a02:238:1:f02a::1"
+export RTR_PUBLIC_UPLINK_OWN_IPV6="2a02:238:1:f02a::2"
+export RTR_PUBLIC_UPLINK_OWN_IPV4="$(for i in $(seq 65 125); do echo 146.0.105.$i; done; for i in $(seq 193 253); do echo 85.239.127.$i; done)"
+export RTR_PUBLIC_IPV6_IF_TEMPLATE="2a02:238:f02a:ffff:1:%d::/128"
+
+export RTR_PRIVATE_UPLINK=veth-pub  # The name of the device presented to CGN router for its uplink
+export RTR_PRIVATE_GATEWAY=146.0.105.65
+export RTR_PRIVATE_TRUNK=veth-br    # The name of the device presented to CGN router as a trunk
+export RTR_PRIVATE_NAT_FIRST=146.0.105.112
+export RTR_PRIVATE_NAT_LAST=146.0.105.119
+export RTR_PRIVATE_NAT_ALL="$(for i in $(seq 112 119); do echo 146.0.105.$i; done)"
