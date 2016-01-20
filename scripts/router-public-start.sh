@@ -50,22 +50,29 @@ done
 
 echo 1 > /proc/sys/net/ipv6/conf/${RTR_PUBLIC_UPLINK}/proxy_ndp
 echo 0 > /proc/sys/net/ipv6/neigh/${RTR_PUBLIC_UPLINK}/proxy_delay
-for ${IP} in ${RTR_PUBLIC_UPLINK_OWN_IPV6}; do
+for ${IP} in ${RTR_PUBLIC_UPLINK_PROXY_IPV6}; do
 	# XXX: Do we need a route?
 	ip -6 neigh add proxy ${IP} dev ${RTR_PUBLIC_UPLINK}
 done
+echo 1 > /proc/sys/net/ipv4/conf/${RTR_PUBLIC_CGN_DOWNLINK}/proxy_arp
+echo 0 > /proc/sys/net/ipv4/neigh/${RTR_PUBLIC_CGN_DOWNLINK}/proxy_delay
+for IP in ${RTR_PUBLIC_UPLINK_PROXY_IPV4}; do
+	ip neigh add proxy ${IP} dev ${RTR_PUBLIC_UPLINK}
+done
+for ${IP} in ${RTR_PUBLIC_UPLINK_OWN_IPV4}; do
+	ip -4 addr add ${IP} dev ${RTR_PUBLIC_UPLINK}
+done
+for ${IP} in ${RTR_PUBLIC_UPLINK_OWN_IPV6}; do
+	ip -6 addr add ${IP} dev ${RTR_PUBLIC_UPLINK}
+done
+
 ip -4 route add default via ${RTR_PUBLIC_UPLINK_GW_IPV4} dev ${RTR_PUBLIC_UPLINK}
 ip -6 route add default via ${RTR_PUBLIC_UPLINK_GW_IPV6} dev ${RTR_PUBLIC_UPLINK}
 
-for IP in ${RTR_PUBLIC_UPLINK_OWN_IPV4}; do
-	ip neigh add proxy ${IP} dev ${RTR_PUBLIC_UPLINK}
-done
 
 # Setup the CGN interface
 ip link set ${RTR_PUBLIC_CGN_DOWNLINK} up
 echo 1 > /proc/sys/net/ipv6/conf/${RTR_PUBLIC_CGN_DOWNLINK}/disable_ipv6
-echo 1 > /proc/sys/net/ipv4/conf/${RTR_PUBLIC_CGN_DOWNLINK}/proxy_arp
-echo 0 > /proc/sys/net/ipv4/neigh/${RTR_PUBLIC_CGN_DOWNLINK}/proxy_delay
 
 for IP in ${RTR_PRIVATE_NAT_ALL}; do
 	ip route add ${IP} dev ${RTR_PUBLIC_CGN_DOWNLINK}
