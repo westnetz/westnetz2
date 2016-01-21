@@ -154,7 +154,7 @@ class DhcpSetup(object):
         config_changed = self.update_config(configuration)
         dhcpd_status = self.dhcpd_status()
 
-        if config_changed or dhcpd_status != interfaces:
+        if config_changed or dhcpd_status != interfaces or args.restart:
             if dhcpd_status is not False:
                 self.stop_dhcpd()
             self.start_dhcpd()
@@ -162,6 +162,7 @@ class DhcpSetup(object):
 ##############################################
 
 parser = westspec.setup('DHCP Setup')
+parser.add_argument('--restart', action='store_true')
 parser.add_argument('--iface', required=True,
                     help="Which interface the customer vlans are on")
 
