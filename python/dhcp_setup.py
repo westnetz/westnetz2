@@ -55,7 +55,6 @@ class DhcpSetup(object):
         ip_network = ipaddr.IPNetwork(network.ip)
         new_config += '# DHCP subnet for VLAN %d\n' % customer.vid
         new_config += 'subnet %s netmask %s {\n' % (ip_network.network, ip_network.netmask)
-        new_config += '    deny dynamic bootp clients;\n'
         new_config += '    range %s %s;\n' % (ip_network.network + 16, ip_network.broadcast - 16)
         new_config += '    option routers %s;\n' % network.rtrip['cluster']
         new_config += '    option broadcast-address %s;\n' % ip_network.broadcast
