@@ -3,6 +3,12 @@
 set -e
 
 . "`dirname $0`"/settings
+. "`dirname $0`"/tools
+
+if namespace_exists router-pub || namespace_exists router-priv; then
+	echo "Westnetz2 already set up" >&2
+	exit 0
+fi
 
 # General network preferences
 echo 0 > /proc/sys/net/ipv4/ip_forward
