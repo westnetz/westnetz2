@@ -27,3 +27,6 @@ export RTR_PRIVATE_TRUNK=veth-br    # The name of the device presented to CGN ro
 export RTR_PRIVATE_NAT_FIRST=146.0.105.112
 export RTR_PRIVATE_NAT_LAST=146.0.105.119
 export RTR_PRIVATE_NAT_ALL="$(for i in $(seq 112 119); do echo 146.0.105.$i; done)"
+
+export DHCP_DOMAIN_NAME=westnetz.org
+export DHCP_DNS_SERVERS="146.0.105.122"
