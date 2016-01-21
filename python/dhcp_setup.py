@@ -156,6 +156,11 @@ class DhcpSetup(object):
            dhcpd is not already running.
            Also, given dhcpds command line syntax, an empty interface list
            will result in dhcpd considering all interfaces."""
+
+        if not os.path.exists(self.leasefile):
+            with open(self.leasefile, 'w') as _:
+                pass
+
         args = ['/usr/sbin/dhcpd', '-q',
                 '-cf', self.configfile,
                 '-pf', self.pidfile,
