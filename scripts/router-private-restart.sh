@@ -7,4 +7,4 @@ set -e
 # This script runs in the private/nat router netns
 
 cd "`dirname $0`"/../python
-${PYTHON} dhcp_setup.py --spec /etc/westnetz.json --restart
+${PYTHON} dhcp_setup.py --iface ${RTR_PRIVATE_TRUNK} --spec /etc/westnetz.json --restart
