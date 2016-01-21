@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-import errno
 import os
 import subprocess
 import sys
+import signal
+import time
+
 import ipaddr
 
 import westspec
@@ -11,7 +13,8 @@ import westspec
 ##############################################
 
 def check_call(*args, **kwargs):
-    command = ' '.join(args[0]) if type(args[0]) is list else args[0]
+    """Like subprocess.check_call, but also logs command to stderr"""
+    command = ' '.join(args[0]) if isinstance(args[0], list) else args[0]
     sys.stderr.write('%s\n' % command)
     return subprocess.check_call(*args, **kwargs)
 
@@ -20,18 +23,22 @@ class DhcpSetup(object):
 
        Supposed to run in the RFC1918/Private namespace"""
 
-    def __init__(self, base_if):
+    def __init__(self, base_if, restart):
         self.base_if = base_if
-        self.customers = [ c for c in westspec.customers if c.privnet is not None ]
+        self.restart = restart
+        self.customers = [c for c in westspec.customers if c.privnet is not None]
         self.configfile = '/tmp/dhcpd-private.conf'
         self.pidfile = '/run/dhcpd-private.pid'
         self.leasefile = '/var/lib/dhcp/dhcpd-private.leases'
 
     # Helper functions
     def iface(self, vid):
+        """Creates interface name from VLAN id"""
         return '%s.%d' % (self.base_if, vid)
 
-    def vid(self, iface):
+    @classmethod
+    def vid(cls, iface):
+        """Gets VLAN id from interface name"""
         return int(iface.split('.')[-1])
 
     def get_customer_config(self, customer, acc_config, acc_interfaces):
@@ -58,6 +65,8 @@ class DhcpSetup(object):
         return (new_config, new_interfaces)
 
     def get_config(self):
+        """Return a tuple containing a dhcpd config and a list
+           of interfaces to run dhcp on."""
         acc_config = ''
         acc_interfaces = []
 
@@ -76,8 +85,9 @@ class DhcpSetup(object):
 
         return (acc_config, sorted(acc_interfaces))
 
-    def update_config(self, new_config)
-        """Update the dhcp server config if necessary. Return True if config changed and false otherwise"""
+    def update_config(self, new_config):
+        """Update the dhcp server config if necessary. Return True if
+           config changed and false otherwise"""
 
         if os.path.exists(self.configfile):
             with open(self.configfile, 'r') as cf:
@@ -88,13 +98,13 @@ class DhcpSetup(object):
         if old_config == new_config:
             return False
 
-        if not dr
         with open(self.configfile, 'w') as cf:
             cf.write(new_config)
         return True
 
     def dhcpd_pid(self):
-        """Returns pid of dhcpd or False if not running"""
+        """Returns pid of dhcpd or False
+           if not running"""
         if not os.path.exists(self.pidfile):
             return False
         with open(self.pidfile, 'r') as pf:
@@ -104,7 +114,8 @@ class DhcpSetup(object):
         return pid
 
     def dhcpd_status(self):
-        """Returns a list of interfaces for which dhcpd is active or False if dhcpd is not running"""
+        """Returns a list of interfaces for which dhcpd is active
+           or False if dhcpd is not running"""
         pid = self.dhcpd_pid()
         if pid is False:
             return False
@@ -120,6 +131,7 @@ class DhcpSetup(object):
         return sorted(interfaces)
 
     def stop_dhcpd(self):
+        """Stops dhcpd if it is running"""
         pid = self.dhcpd_pid()
         if pid is False:
             print >>sys.stderr, "STRANGE: dhcpd is not running"
@@ -128,7 +140,7 @@ class DhcpSetup(object):
         print >>sys.stderr, "Sending SIGTERM do dhcpd"
         os.kill(pid, signal.SIGTERM)
         print >>sys.stderr, "Waiting for dhcpd to stop"
-        for i in range(15):
+        for _ in range(15):
             if self.dhcpd_pid() is False:
                 print >>sys.stderr, "dhcpd stopped"
                 break
@@ -141,6 +153,10 @@ class DhcpSetup(object):
                 raise RuntimeError("DHCPD did not stop")
 
     def start_dhcpd(self, interfaces):
+        """Starts dhcpd for the given interfaces. Care should be taken that
+           dhcpd is not already running.
+           Also, given dhcpds command line syntax, an empty interface list
+           will result in dhcpd considering all interfaces."""
         args = ['/usr/sbin/dhcpd', '-q',
                 '-cf', self.configfile,
                 '-pf', self.pidfile,
@@ -149,15 +165,16 @@ class DhcpSetup(object):
         check_call(args)
 
     def configure(self):
+        """Make sure that dhcpd runs according to the given configuration"""
         configuration, interfaces = self.get_config()
 
         config_changed = self.update_config(configuration)
         dhcpd_status = self.dhcpd_status()
 
-        if config_changed or dhcpd_status != interfaces or args.restart:
+        if config_changed or dhcpd_status != interfaces or self.restart:
             if dhcpd_status is not False:
                 self.stop_dhcpd()
-            self.start_dhcpd()
+            self.start_dhcpd(interfaces)
 
 ##############################################
 
@@ -166,8 +183,8 @@ parser.add_argument('--restart', action='store_true')
 parser.add_argument('--iface', required=True,
                     help="Which interface the customer vlans are on")
 
-spec, args = westspec.load(parser)
+spec, script_args = westspec.load(parser)
 
 ##############################################
 
-DhcpSetup(args.iface).configure()
+DhcpSetup(script_args.iface, script_args.restart).configure()

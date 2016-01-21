@@ -28,9 +28,9 @@ class IntervlanRouter(object):
     def __init__(self, base_if, public):
         self.base_if = base_if
         if public:
-            self.customers = [ c for c in westspec.customers if c.proxyif or c.extranets ]
+            self.customers = [c for c in westspec.customers if c.proxyif or c.extranets]
         else:
-            self.customers = [ c for c in westspec.customers if c.privnet is not None ]
+            self.customers = [c for c in westspec.customers if c.privnet is not None]
         self.public = public # Public Router or RFC1918 router?
 
     # Helper functions
@@ -52,19 +52,19 @@ class IntervlanRouter(object):
             return []
 
         f = self.iproute_family(family)
-        output = subprocess.check_output(['ip','-o',f,'addr','list','dev',iface])
+        output = subprocess.check_output(['ip', '-o', f, 'addr', 'list', 'dev', iface])
         return [line.split()[3] for line in output.splitlines()]
 
     def get_interfaces(self):
         is_vlan = lambda name: name.startswith(self.base_if + '.')
-        return filter(is_vlan, os.listdir('/sys/class/net'))
+        return [iface for iface in os.listdir('/sys/class/net') if is_vlan(iface)]
 
     def get_routes(self, iface, family):
         if iface not in self.get_interfaces() and dry_run:
             return []
 
         f = self.iproute_family(family)
-        output = subprocess.check_output(['ip','-o',f,'route','list','dev',iface])
+        output = subprocess.check_output(['ip', '-o', f, 'route', 'list', 'dev', iface])
         rv = []
         for r in output.splitlines():
             if ' proto kernel ' in r:
@@ -94,14 +94,14 @@ class IntervlanRouter(object):
     def configure_vlans(self):
         """Add/Delete vlan interfaces"""
         current_interfaces = set(self.get_interfaces())
-        new_interfaces = set([ self.iface(c.vid) for c in self.customers ])
+        new_interfaces = set([self.iface(c.vid) for c in self.customers])
 
         for iface in current_interfaces - new_interfaces:
-            check_call(['ip','link','del',iface])
+            check_call(['ip', 'link', 'del', iface])
         for iface in new_interfaces - current_interfaces:
-            check_call(['ip','link','add','link',self.base_if,iface,
-                        'type','vlan','id',str(self.vid(iface))])
-            check_call(['ip','link','set',iface,'up'])
+            check_call(['ip', 'link', 'add', 'link', self.base_if, iface,
+                        'type', 'vlan', 'id', str(self.vid(iface))])
+            check_call(['ip', 'link', 'set', iface, 'up'])
 
         for iface in new_interfaces:
             self.set_file('/proc/sys/net/ipv4/conf/%s/rp_filter' % iface, '1')
@@ -123,9 +123,9 @@ class IntervlanRouter(object):
                     new_ips.add('%s/%d' % (s.rtrip['cluster'], s.masklen))
 
             for ip in current_ips - new_ips:
-                check_call(['ip','addr','del',ip,'dev',iface])
+                check_call(['ip', 'addr', 'del', ip, 'dev', iface])
             for ip in new_ips - current_ips:
-                check_call(['ip', 'addr','add',ip,'dev',iface])
+                check_call(['ip', 'addr', 'add', ip, 'dev', iface])
 
     def configure_ipv4_routes(self):
         """Add/Delete ipv4 routes"""
@@ -144,7 +144,7 @@ class IntervlanRouter(object):
                     r = str(en.ip)
                     if en.gw is not None:
                         r += ' via %s' % (en.gw)
-                    new_routes.append(r)
+                    new_routes.add(r)
             else:
                 # We don't install any routes for private addresses, currently
                 pass
@@ -179,14 +179,17 @@ class IntervlanRouter(object):
 
         for c in self.customers:
             iface = self.iface(c.vid)
-            self.set_file('/proc/sys/net/ipv4/conf/%s/proxy_arp' % iface, '1' if c.proxyif and self.public else '0')
+            self.set_file('/proc/sys/net/ipv4/conf/%s/proxy_arp' % iface,
+                          '1' if c.proxyif and self.public else '0')
             self.set_file('/proc/sys/net/ipv4/neigh/%s/proxy_delay' % iface, '0')
             # Proxyarp only works with arp_ignore == 0
-            self.set_file('/proc/sys/net/ipv4/conf/%s/arp_ignore' % iface, '0' if c.proxyif and self.public else '1')
+            self.set_file('/proc/sys/net/ipv4/conf/%s/arp_ignore' % iface,
+                          '0' if c.proxyif and self.public else '1')
 
-            # Add an arptables entry that associates each customer public IP with a sensible source-ip to use for arp
-            # e.g. Fritz!boxes are very particular about what they expect here and won't answer arp-requests sourced
-            # from IPs they don't consider on-link
+            # Add an arptables entry that associates each customer public IP
+            # with a sensible source-ip to use for arp, e.g. Fritz!boxes are
+            # very particular about what they expect here and won't answer
+            # arp-requests sourced from IPs they don't consider on-link
             if self.public and c.proxyips:
                 for pi in c.proxyips:
                     # XXX: MAGIC
@@ -197,7 +200,7 @@ class IntervlanRouter(object):
                     else:
                         raise Exception("Unknown proxyarp IP range %s" % pi.ip)
                     new_content += '-A OUTPUT -j mangle -d %s --opcode 1 --mangle-ip-s %s\n' % (
-                                    pi.ip, arp_source)
+                        pi.ip, arp_source)
 
         new_content += '\n'
         if current_content != new_content:
@@ -221,14 +224,14 @@ class IntervlanRouter(object):
                 new_ips = set()
 
             for ip in current_ips - new_ips:
-                check_call(['ip','addr','del',ip,'dev',iface])
+                check_call(['ip', 'addr', 'del', ip, 'dev', iface])
             for ip in new_ips - current_ips:
-                check_call(['ip','addr','add',ip,'dev',iface])
+                check_call(['ip', 'addr', 'add', ip, 'dev', iface])
 
     def configure_ipv6_routes(self):
         """Enable/Disable IPv6 forwarding, add/delete IPv6 routes"""
         for c in self.customers:
-            iface  = self.iface(c.vid)
+            iface = self.iface(c.vid)
 
             # Enable/Disable IPv6
             self.set_file('/proc/sys/net/ipv6/conf/%s/forwarding' % iface, '1' if c.ipv6 and self.public else '0')

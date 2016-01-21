@@ -35,7 +35,7 @@ class Customer(object):
 
 class Subnet4(object):
     # XXX: MAGIC
-    rfcre = re.compile('^172\.19\.(\d+)\.0/24$')
+    rfcre = re.compile(r'^172\.19\.(\d+)\.0/24$')
 
     def __init__(self, ip, dictentry):
         vid = int(dictentry['vlan'])
