@@ -1,0 +1,8 @@
+namespace_exists() {
+	for NAMESPACE in $(ip netns list); do
+		if [ x"$1" = x"$NAMESPACE" ]; then
+			return 0
+		fi
+	done
+	return 1
+}
