@@ -23,7 +23,7 @@ ip netns add router-pub
 ip netns add router-priv
 
 # Place uplink vlan in router-pub
-ip link add link ${MAIN_DEVICE} ${RTR_PUBLIC_UPLINK} type vlan id ${UPLINK_VLAN}
+ip link add link ${UPLINK_DEVICE} ${RTR_PUBLIC_UPLINK} type vlan id ${UPLINK_VLAN}
 ip link set ${RTR_PUBLIC_UPLINK} netns router-pub
 
 # Interconnect router-pub to router-priv for public NAT-pool

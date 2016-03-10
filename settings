@@ -3,7 +3,8 @@
 export PYTHON=python2
 
 export MAIN_DEVICE=eth0 # The device which is the stick to our switch that carries all VLANs
-export UPLINK_VLAN=1999 # The vlan which is used for the uplink
+export UPLINK_DEVICE=eth1
+export UPLINK_VLAN=1998 # The vlan which is used for the uplink
 
 export RTR_PUBLIC_UPLINK=vlan-uplink
 export RTR_PUBLIC_CGN_DOWNLINK=veth-priv
