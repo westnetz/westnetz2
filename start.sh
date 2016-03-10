@@ -40,6 +40,10 @@ ip link set veth-priv up
 brctl addif br0 ${MAIN_DEVICE}
 ip link set br0 up
 
+if [ -x "/etc/westnetz.start.hook" ]; then
+	/etc/westnetz.start.hook
+fi
+
 # TODO: Setup QoS
 
 # Setup the actual router configuration
