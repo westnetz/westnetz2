@@ -17,6 +17,7 @@ echo 1 > /proc/sys/net/ipv6/conf/default/disable_ipv6
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
 
 ip link set ${MAIN_DEVICE} up
+ip link set ${UPLINK_DEVICE} up
 
 # Create the router namespaces
 ip netns add router-pub
