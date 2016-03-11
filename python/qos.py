@@ -37,20 +37,27 @@ netif_egress_ifb() {
 netif_egress_ifb veth-priv
 netif_egress_ifb veth-pub
 
+tc_inttraf() {
+	dev="$1"; shift
+	dir="$1"; shift
+
+	tc filter add dev $dev parent 1:0 protocol ip   priority 10 u32 match ip  $dir 172.19.0.0/16    flowid 1:3998
+	tc filter add dev $dev parent 1:0 protocol ip   priority 11 u32 match ip  $dir 185.142.180.0/22 flowid 1:3998
+	tc filter add dev $dev parent 1:0 protocol ipv6 priority 12 u32 match ip6 $dir 2a07:2ec0::/29   flowid 1:3998
+}
+
+tc_inttraf ifb0 dst
+tc_inttraf eth0 src
+
 tc_vlan() {
 	dev="$1"; shift
 	vlanid="$1"; shift
 	rate="$1"; shift
-	dir="$1"; shift
 	extra="$*"
 
 	tc class  add dev $dev parent 1:1 classid 1:$vlanid hfsc \
 		$extra ls rate 10Mbit ul rate $rate
 	tc qdisc  add dev $dev parent 1:$vlanid handle $vlanid: sfq
-
-	tc filter add dev $dev parent 1:0 protocol ip   priority 10 u32 match ip  $dir 172.19.0.0/16    flowid 1:3998
-	tc filter add dev $dev parent 1:0 protocol ip   priority 11 u32 match ip  $dir 185.142.180.0/22 flowid 1:3998
-	tc filter add dev $dev parent 1:0 protocol ipv6 priority 12 u32 match ip6 $dir 2a07:2ec0::/29   flowid 1:3998
 
 	tc filter add dev $dev parent 1:0 protocol ip   priority 20 basic match meta '(' vlan eq $vlanid ')' flowid 1:$vlanid
 	tc filter add dev $dev parent 1:0 protocol ipv6 priority 21 basic match meta '(' vlan eq $vlanid ')' flowid 1:$vlanid
