@@ -31,15 +31,15 @@ ip link set ${RTR_PUBLIC_UPLINK} netns router-pub
 ip link add ${RTR_PUBLIC_CGN_DOWNLINK} netns router-pub type veth peer name ${RTR_PRIVATE_UPLINK} netns router-priv
 
 # Create Bridge for customer traffic to/from routers
-brctl addbr br0
+brctl addbr br-int
 ip link add veth-pub type veth peer name ${RTR_PUBLIC_TRUNK} netns router-pub
-brctl addif br0 veth-pub
+brctl addif br-int veth-pub
 ip link set veth-pub up
 ip link add veth-priv type veth peer name ${RTR_PRIVATE_TRUNK} netns router-priv
-brctl addif br0 veth-priv
+brctl addif br-int veth-priv
 ip link set veth-priv up
-brctl addif br0 ${MAIN_DEVICE}
-ip link set br0 up
+brctl addif br-int ${MAIN_DEVICE}
+ip link set br-int up
 
 if [ -x "/etc/westnetz.start.hook" ]; then
 	/etc/westnetz.start.hook
