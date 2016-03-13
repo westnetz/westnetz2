@@ -12,6 +12,9 @@ else
 	exit 0
 fi
 
+ip netns exec router-pub "`dirname $0`/scripts/router-public-stop.sh"
+ip netns exec router-priv "`dirname $0`/scripts/router-private-stop.sh"
+
 ip netns del router-priv
 ip netns del router-pub
 

@@ -101,3 +101,7 @@ echo 1 > /proc/sys/net/ipv6/conf/${RTR_PUBLIC_TRUNK}/disable_ipv6
 # And setup customer facing vlans
 cd "`dirname $0`"/../python
 ${PYTHON} inter_vlan_router.py --mode public --iface ${RTR_PUBLIC_TRUNK} --apply --spec /etc/westnetz.json
+if [ -d "/etc/westnetz.service.public" ]; then
+	runsvdir /etc/westnetz.service.public ...................................................... > /dev/null 2>&1 < /dev/null &
+	echo "$!" > "/run/runsvdir-public.pid"
+fi
