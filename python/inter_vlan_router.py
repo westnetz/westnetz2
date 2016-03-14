@@ -197,6 +197,8 @@ class IntervlanRouter(object):
                         arp_source = '85.239.127.193'
                     elif pi.ip.startswith('146.0.105.'):
                         arp_source = '146.0.105.65'
+                    elif pi.ip.startswith('185.142.180.'):
+                        arp_source = '185.142.180.1'
                     else:
                         raise Exception("Unknown proxyarp IP range %s" % pi.ip)
                     new_content += '-A OUTPUT -j mangle -d %s --opcode 1 --mangle-ip-s %s\n' % (
