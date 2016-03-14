@@ -12,7 +12,9 @@ else
 	exit 0
 fi
 
+echo "=== On public router ===" >&2
 ip netns exec router-pub "`dirname $0`/scripts/router-public-stop.sh"
+echo "=== On private router ===" >&2
 ip netns exec router-priv "`dirname $0`/scripts/router-private-stop.sh"
 
 ip netns del router-priv

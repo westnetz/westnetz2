@@ -48,5 +48,7 @@ fi
 # TODO: Setup QoS
 
 # Setup the actual router configuration
+echo "=== On public router ===" >&2
 ip netns exec router-pub "`dirname $0`/scripts/router-public-start.sh"
+echo "=== On private router ===" >&2
 ip netns exec router-priv "`dirname $0`/scripts/router-private-start.sh"
