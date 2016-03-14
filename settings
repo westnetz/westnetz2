@@ -1,5 +1,10 @@
 # This file is sourced by all shell scripts
 
+if [ -r "/etc/westnetz2.settings" ]; then
+	source /etc/westnetz2.settings
+	return
+fi
+
 export PYTHON=python2
 
 export MAIN_DEVICE=eth-int # The device which is the stick to our switch that carries all VLANs
