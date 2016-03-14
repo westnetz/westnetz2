@@ -83,9 +83,13 @@ if [ -n "${RTR_PUBLIC_UPLINK_OWN_IPV6}" ]; then
 	done
 fi
 
-ip -4 route add default via ${RTR_PUBLIC_UPLINK_GW_IPV4} dev ${RTR_PUBLIC_UPLINK}
-ip -6 route add default via ${RTR_PUBLIC_UPLINK_GW_IPV6} dev ${RTR_PUBLIC_UPLINK}
+if [ -n "${RTR_PUBLIC_UPLINK_GW_IPV4}" ]; then
+	ip -4 route add default via ${RTR_PUBLIC_UPLINK_GW_IPV4} dev ${RTR_PUBLIC_UPLINK}
+fi
 
+if [ -n "${RTR_PUBLIC_UPLINK_GW_IPV6}" ]; then
+	ip -6 route add default via ${RTR_PUBLIC_UPLINK_GW_IPV6} dev ${RTR_PUBLIC_UPLINK}
+fi
 
 # Setup the CGN interface
 ip link set ${RTR_PUBLIC_CGN_DOWNLINK} up

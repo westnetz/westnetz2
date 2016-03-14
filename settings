@@ -1,7 +1,7 @@
 # This file is sourced by all shell scripts
 
 if [ -r "/etc/westnetz2.settings" ]; then
-	source /etc/westnetz2.settings
+	. /etc/westnetz2.settings
 	return
 fi
 
