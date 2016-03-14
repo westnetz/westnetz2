@@ -31,8 +31,11 @@ ip route add unreachable 192.168.0.0/16
 ip route add unreachable 100.64.0.0/10
 
 # Do not route our own IP space, unless we have a more specific
-for NET in ${RTR_PUBLIC_OWN_NETS}; do
+for NET in ${RTR_PUBLIC_OWN_NETS_V4}; do
 	ip route add unreachable ${NET}
+done
+for NET in ${RTR_PUBLIC_OWN_NETS_V6}; do
+	ip -6 route add unreachable ${NET}
 done
 
 # Don't do any connection tracking in the public IP router
