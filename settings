@@ -11,6 +11,9 @@ export MAIN_DEVICE=eth-int # The device which is the stick to our switch that ca
 export UPLINK_DEVICE=eth-ext
 export UPLINK_VLAN=1998 # The vlan which is used for the uplink
 
+export BW_UPLOAD=28Mbit
+export BW_DOWNLOAD=38Mbit
+
 export RTR_PUBLIC_UPLINK=vlan-uplink
 export RTR_PUBLIC_CGN_DOWNLINK=veth-priv
 export RTR_PUBLIC_TRUNK=veth-br
@@ -34,6 +37,7 @@ export RTR_PRIVATE_TRUNK=veth-br    # The name of the device presented to CGN ro
 export RTR_PRIVATE_NAT_FIRST=146.0.105.112
 export RTR_PRIVATE_NAT_LAST=146.0.105.119
 export RTR_PRIVATE_NAT_ALL="$(for i in $(seq 112 119); do echo 146.0.105.$i; done)"
+export RTR_PRIVATE_OWN_NETS="172.19.0.0/16"
 
 export DHCP_DOMAIN_NAME=westnetz.org
 export DHCP_DNS_SERVERS="146.0.105.122"
