@@ -15,6 +15,9 @@ echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
 echo 0 > /proc/sys/net/ipv6/conf/default/accept_ra
 echo 0 > /proc/sys/net/ipv6/conf/all/accept_ra
 
+ip link add dummy-static type dummy
+ip link set dummy-static up
+
 # General network setup
 ip link set lo up
 for IP in ${RTR_PUBLIC_LOOPBACK_IPV4}; do
