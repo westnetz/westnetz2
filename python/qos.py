@@ -9,6 +9,7 @@ template = Template('''#!/bin/sh
 {% set main_dev = env.MAIN_DEVICE %}
 # 3999: default class (i.e. misconfiguration + ARP/LLDP/v6LL traffic)
 # 3998: internal traffic
+# 3997: internet traffic
 
 netif_base() {
 	dev="$1"
@@ -18,9 +19,10 @@ netif_base() {
 	ip link  set dev $dev txqueuelen 128
 	tc qdisc del dev $dev root >/dev/null 2>&1
 	tc qdisc add dev $dev root handle 1: hfsc default 3999
-	tc class add dev $dev parent 1:  classid 1:1    hfsc sc rate     $bw ul rate     $bw
-	tc class add dev $dev parent 1:1 classid 1:3999 hfsc ls rate   1Mbit ul rate   1Mbit
-	tc class add dev $dev parent 1:1 classid 1:3998 hfsc ls rate 100Mbit ul rate 750Mbit
+	tc class add dev $dev parent 1:  classid 1:1    hfsc sc rate 900Mbit ul rate 900MBit
+	tc class add dev $dev parent 1:1 classid 1:3999 hfsc ls rate  10MBit ul rate  10MBit
+	tc class add dev $dev parent 1:1 classid 1:3998 hfsc ls rate  10Mbit ul rate 750Mbit
+	tc class add dev $dev parent 1:1 classid 1:3997 hfsc ls rate  10Mbit ul rate     $bw
 	tc qdisc add dev $dev parent 1:3999 handle 3999: sfq
 	tc qdisc add dev $dev parent 1:3998 handle 3998: sfq
 }
@@ -58,7 +60,7 @@ tc_vlan() {
 	rate="$1"; shift
 	extra="$*"
 
-	tc class  add dev $dev parent 1:1 classid 1:$vlanid hfsc \
+	tc class  add dev $dev parent 1:3997 classid 1:$vlanid hfsc \
 		$extra ls rate 10Mbit ul rate $rate
 	tc qdisc  add dev $dev parent 1:$vlanid handle $vlanid: sfq
 
@@ -73,6 +75,11 @@ tc_vlan ifb0 {{ klass }} {{ upstream   }} {% if info.upstream_guarantee   %} rt 
 tc_vlan {{ main_dev }} {{ klass }} {{ downstream }} {% if info.downstream_guarantee %} rt rate {{ info.downstream_guarantee }} {% endif %} # down
 
 {% endfor %}
+
+if [ -x "/etc/westnetz.qos.hook" ]; then
+	/etc/westnetz.qos.hook
+fi
+
 ''')
 
 ##############################################################################
