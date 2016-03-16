@@ -44,6 +44,8 @@ done
 # Don't do any connection tracking in the public IP router
 iptables -t raw -I PREROUTING -j NOTRACK
 ip6tables -t raw -I PREROUTING -j NOTRACK
+# Enable rp_filter for IPv6
+ip6tables -t raw -A PREROUTING -m rpfilter --invert -j DROP
 
 # Setup the WAN interface
 ip link set ${RTR_PUBLIC_UPLINK} up
