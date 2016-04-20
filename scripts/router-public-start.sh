@@ -106,6 +106,7 @@ echo 1 > /proc/sys/net/ipv6/conf/${RTR_PUBLIC_CGN_DOWNLINK}/disable_ipv6
 for IP in ${RTR_PRIVATE_NAT_ALL}; do
 	ip route add ${IP} dev ${RTR_PUBLIC_CGN_DOWNLINK}
 done
+ip route add ${RTR_PRIVATE_LOOPBACK}/32 dev ${RTR_PUBLIC_CGN_DOWNLINK}
 
 # Make sure the vlan interface is up
 ip link set ${RTR_PUBLIC_TRUNK} up
