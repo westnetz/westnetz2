@@ -55,6 +55,9 @@ COMMIT
 #
 EOF
 iptables-restore < /tmp/router-private-iptables.conf
+for IP in ${RTR_PRIVATE_NAT_ALL}; do
+	iptables -A FORWARD -m state --state NEW -d ${IP} -j DROP
+done
 
 # Conntrack settings
 echo 262144 > /proc/sys/net/netfilter/nf_conntrack_max
