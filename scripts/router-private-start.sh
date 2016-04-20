@@ -15,8 +15,7 @@ echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
 
 # General network setup
 ip link set lo up
-ip addr add ${RTR_PRIVATE_NAT_FIRST}/32 dev lo # TODO: maybe use dedicated IP for loopback;
-                                               # IP is needed as ARP-source towards router-pub
+ip addr add ${RTR_PRIVATE_LOOPBACK}/32 dev lo  # IP is needed as ARP-source towards router-pub
                                                # and as ICMP-Error source
 
 # WAN setup
