@@ -204,6 +204,10 @@ class IntervlanRouter(object):
                     new_content += '-A OUTPUT -j mangle -d %s --opcode 1 --mangle-ip-s %s\n' % (
                         pi.ip, arp_source)
 
+        if self.public:
+            for net in os.environ['RTR_PUBLIC_OWN_NETS_V4'].split():
+                new_content += '-A OUTPUT -s %s -j ACCEPT\n' % net
+            new_content += '-A OUTPUT -j DROP\n'
         new_content += '\n'
         if current_content != new_content:
             if not dry_run:
