@@ -223,7 +223,7 @@ class IntervlanRouter(object):
             current_ips = set(self.get_addresses(iface, 'ipv6'))
             if c.ipv6 and self.public:
                 new_ips = set([
-                    'fe80::1/64',
+                    'fe80::23/64',
                     os.getenv('RTR_PUBLIC_IPV6_IF_TEMPLATE') % c.vid # XXX: MAGIC
                 ])
             else:
