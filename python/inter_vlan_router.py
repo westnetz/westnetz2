@@ -220,6 +220,9 @@ class IntervlanRouter(object):
         for c in self.customers:
             iface = self.iface(c.vid)
 
+            # Enable/Disable IPv6
+            self.set_file('/proc/sys/net/ipv6/conf/%s/disable_ipv6' % iface, '0' if c.ipv6 and self.public else '1')
+
             current_ips = set(self.get_addresses(iface, 'ipv6'))
             if c.ipv6 and self.public:
                 new_ips = set([
@@ -241,7 +244,6 @@ class IntervlanRouter(object):
 
             # Enable/Disable IPv6
             self.set_file('/proc/sys/net/ipv6/conf/%s/forwarding' % iface, '1' if c.ipv6 and self.public else '0')
-            self.set_file('/proc/sys/net/ipv6/conf/%s/disable_ipv6' % iface, '0' if c.ipv6 and self.public else '1')
 
             # Update Routes
             current_routes = set(self.get_routes(iface, 'ipv6'))
