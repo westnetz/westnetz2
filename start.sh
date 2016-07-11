@@ -47,6 +47,9 @@ ip link set veth-priv up
 brctl addif br-int ${MAIN_DEVICE}
 ip link set br-int up
 
+# Turn off IGMP snooping on bridge
+echo 0 > /sys/devices/virtual/net/br-int/bridge/multicast_snooping
+
 if [ -x "/etc/westnetz.start.hook" ]; then
 	/etc/westnetz.start.hook
 fi
