@@ -59,6 +59,11 @@ for IP in ${RTR_PRIVATE_NAT_ALL}; do
 	iptables -A FORWARD -m state --state NEW -d ${IP} -j DROP
 done
 
+ip6tables -A INPUT   -p icmpv6 --icmpv6-type router-solicitation  -m frag -j DROP
+ip6tables -A INPUT   -p icmpv6 --icmpv6-type router-advertisement -m frag -j DROP
+ip6tables -A FORWARD -p icmpv6 --icmpv6-type router-solicitation  -m frag -j DROP
+ip6tables -A FORWARD -p icmpv6 --icmpv6-type router-advertisement -m frag -j DROP
+
 # Conntrack settings
 echo 262144 > /proc/sys/net/netfilter/nf_conntrack_max
 echo 90 > /proc/sys/net/netfilter/nf_conntrack_udp_timeout

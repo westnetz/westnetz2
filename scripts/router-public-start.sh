@@ -47,6 +47,11 @@ ip6tables -t raw -I PREROUTING -j NOTRACK
 # Enable rp_filter for IPv6
 ip6tables -t raw -A PREROUTING -m rpfilter --invert -j DROP
 
+ip6tables -A INPUT   -p icmpv6 --icmpv6-type router-solicitation  -m frag -j DROP
+ip6tables -A INPUT   -p icmpv6 --icmpv6-type router-advertisement -m frag -j DROP
+ip6tables -A FORWARD -p icmpv6 --icmpv6-type router-solicitation  -m frag -j DROP
+ip6tables -A FORWARD -p icmpv6 --icmpv6-type router-advertisement -m frag -j DROP
+
 # Setup the WAN interface
 ip link set ${RTR_PUBLIC_UPLINK} up
 if [ -n "${RTR_PUBLIC_UPLINK_ONLINK_IPV4}" ]; then
