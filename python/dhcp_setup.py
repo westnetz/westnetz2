@@ -27,6 +27,7 @@ class DhcpSetup(object):
         self.base_if = base_if
         self.restart = restart
         self.customers = [c for c in westspec.customers if c.privnet is not None]
+        # XXX: These need to match the settings in the runit service
         self.configfile = '/tmp/dhcpd-private.conf'
         self.pidfile = '/run/dhcpd-private.pid'
         self.leasefile = '/var/lib/dhcp/dhcpd-private.leases'
@@ -168,17 +169,20 @@ class DhcpSetup(object):
         args += interfaces
         check_call(args)
 
+    def restart_dhcpd(self):
+        """Restarts dhcpd running in runit"""
+        args = ['/usr/bin/sv', 'force-restart',
+                '/etc/westnetz.service.private/dhcpd']
+        check_call(args)
+
     def configure(self):
         """Make sure that dhcpd runs according to the given configuration"""
         configuration, interfaces = self.get_config()
 
         config_changed = self.update_config(configuration)
-        dhcpd_status = self.dhcpd_status()
 
-        if config_changed or dhcpd_status != interfaces or self.restart:
-            if dhcpd_status is not False:
-                self.stop_dhcpd()
-            self.start_dhcpd(interfaces)
+        if config_changed or self.restart:
+            self.restart_dhcpd()
 
 ##############################################
 
