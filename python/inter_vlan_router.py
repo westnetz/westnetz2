@@ -209,7 +209,10 @@ class IntervlanRouter(object):
                 new_content += '-A OUTPUT -s %s -j ACCEPT\n' % net
             new_content += '-A OUTPUT -j DROP\n'
         new_content += '\n'
-        if current_content != new_content:
+        # Christian 2016-09-28: This check is incomplete, while
+        # it's correct for update, but it will not restore arptables
+        # when the netns is restarted
+        if True: # current_content != new_content
             if not dry_run:
                 with open(filename, 'w') as new_file:
                     new_file.write(new_content)
