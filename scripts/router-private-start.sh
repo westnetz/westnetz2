@@ -36,8 +36,9 @@ else
 	ip route add default via ${NAT_PRIV_CGN_CGN}
 fi
 
-# NAT and firewall config
-cat << EOF > /tmp/router-private-iptables.conf
+if [ x"$NAT_EXTERNAL" != x"yes" ]; then
+	# NAT and firewall config
+	cat << EOF > /tmp/router-private-iptables.conf
 #
 *filter
 :INPUT ACCEPT
@@ -59,13 +60,32 @@ COMMIT
 COMMIT
 #
 EOF
-iptables-restore < /tmp/router-private-iptables.conf
+	iptables-restore < /tmp/router-private-iptables.conf
 
-if [ x"$NAT_EXTERNAL" != x"yes" ]; then
 	for IP in ${RTR_PRIVATE_NAT_ALL}; do
 		iptables -A FORWARD -m state --state NEW -d ${IP} -j DROP
 	done
 else
+	cat << EOF > /tmp/router-private-iptables.conf
+#
+*filter
+:INPUT ACCEPT
+:FORWARD ACCEPT
+:OUTPUT ACCEPT
+:customer_filter -
+-A FORWARD -s 172.19.128.0/17 -d 172.19.128.0/17 -j LOG --log-prefix c2c
+-A FORWARD -s 172.19.128.0/17 -d 172.19.128.0/17 -j REJECT --reject-with icmp-net-prohibited
+COMMIT
+#
+*nat
+:PREROUTING ACCEPT
+:INPUT ACCEPT
+:OUTPUT ACCEPT
+:POSTROUTING ACCEPT
+COMMIT
+#
+EOF
+	iptables-restore < /tmp/router-private-iptables.conf
 	# If NAT is external, don't do conntrack
 	iptables -t raw -I PREROUTING -j NOTRACK
 	ip6tables -t raw -I PREROUTING -j NOTRACK

@@ -37,6 +37,7 @@ ip link set ${RTR_PUBLIC_UPLINK} netns router-pub
 if [ x"$NAT_EXTERNAL" != x"yes" ]; then
 	ip link add ${RTR_PUBLIC_CGN_DOWNLINK} netns router-pub type veth peer name ${RTR_PRIVATE_UPLINK} netns router-priv
 else
+	ip link set ${NAT_DEVICE} up
 	ip link add link ${NAT_DEVICE} ${RTR_PUBLIC_CGN_DOWNLINK} netns router-pub type vlan id ${NAT_VLAN_PUB}
 	ip link add link ${NAT_DEVICE} ${RTR_PRIVATE_UPLINK} netns router-priv type vlan id ${NAT_VLAN_PRIV}
 fi
