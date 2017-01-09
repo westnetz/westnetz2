@@ -107,10 +107,16 @@ fi
 # Setup the CGN interface
 ip link set ${RTR_PUBLIC_CGN_DOWNLINK} up
 echo 1 > /proc/sys/net/ipv6/conf/${RTR_PUBLIC_CGN_DOWNLINK}/disable_ipv6
-
-for IP in ${RTR_PRIVATE_NAT_ALL}; do
-	ip route add ${IP} dev ${RTR_PUBLIC_CGN_DOWNLINK}
-done
+if [ x"$NAT_EXTERNAL" != x"yes" ]; then
+	for IP in ${RTR_PRIVATE_NAT_ALL}; do
+		ip route add ${IP} dev ${RTR_PUBLIC_CGN_DOWNLINK}
+	done
+else
+	ip addr add ${NAT_PUB_CGN_OWN} dev ${RTR_PUBLIC_CGN_DOWNLINK}
+	for IP in ${RTR_PRIVATE_NAT_ALL}; do
+		ip route add ${IP} via ${NAT_PUB_CGN_CGN}
+	done
+fi
 
 # Make sure the vlan interface is up
 ip link set ${RTR_PUBLIC_TRUNK} up

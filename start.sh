@@ -34,7 +34,12 @@ ip link add link ${UPLINK_DEVICE} ${RTR_PUBLIC_UPLINK} type vlan id ${UPLINK_VLA
 ip link set ${RTR_PUBLIC_UPLINK} netns router-pub
 
 # Interconnect router-pub to router-priv for public NAT-pool
-ip link add ${RTR_PUBLIC_CGN_DOWNLINK} netns router-pub type veth peer name ${RTR_PRIVATE_UPLINK} netns router-priv
+if [ x"$NAT_EXTERNAL" != x"yes" ]; then
+	ip link add ${RTR_PUBLIC_CGN_DOWNLINK} netns router-pub type veth peer name ${RTR_PRIVATE_UPLINK} netns router-priv
+else
+	ip link add link ${NAT_DEVICE} ${RTR_PUBLIC_CGN_DOWNLINK} netns router-pub type vlan id ${NAT_VLAN_PUB}
+	ip link add link ${NAT_DEVICE} ${RTR_PRIVATE_UPLINK} netns router-priv type vlan id ${NAT_VLAN_PRIV}
+fi
 
 # Create Bridge for customer traffic to/from routers
 brctl addbr br-int

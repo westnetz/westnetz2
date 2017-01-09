@@ -42,3 +42,12 @@ export RTR_PRIVATE_OWN_NETS="172.19.0.0/16"
 
 export DHCP_DOMAIN_NAME=westnetz.org
 export DHCP_DNS_SERVERS="146.0.105.122"
+
+export NAT_EXTERNAL=no
+export NAT_DEVICE=veth-nat
+export NAT_VLAN_PUB=1995   # Vlan for pub side of CGN
+export NAT_VLAN_PRIV=1996  # Vlan for priv side of CGN
+export NAT_PUB_CGN_OWN="100.100.100.1/30" # IP for transfer from pub-router to cgn
+export NAT_PUB_CGN_CGN="100.100.100.2" # IP of cgn in transfer net
+export NAT_PRIV_CGN_OWN="100.100.100.6/30" # IP for transfer to priv-router from cgn
+export NAT_PRIV_CGN_CGN="100.100.100.5" # IP of cgn in transfer net

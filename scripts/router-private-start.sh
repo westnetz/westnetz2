@@ -20,16 +20,21 @@ ip addr add ${RTR_PRIVATE_LOOPBACK}/32 dev lo  # IP is needed as ARP-source towa
 
 # WAN setup
 ip link set ${RTR_PRIVATE_UPLINK} up
-ip link add dummy-nat type dummy
-ip link set dummy-nat up
 echo 1 > /proc/sys/net/ipv6/conf/${RTR_PRIVATE_UPLINK}/disable_ipv6
-echo 0 > /proc/sys/net/ipv4/neigh/${RTR_PRIVATE_UPLINK}/proxy_delay
-ip route add ${RTR_PRIVATE_GATEWAY} dev ${RTR_PRIVATE_UPLINK}
-ip route add default via ${RTR_PRIVATE_GATEWAY}
-for IP in ${RTR_PRIVATE_NAT_ALL}; do
-	ip neigh add proxy ${IP} dev ${RTR_PRIVATE_UPLINK}
-	ip route add ${IP}/32 dev dummy-nat
-done
+if [ x"$NAT_EXTERNAL" != x"yes" ]; then
+	ip link add dummy-nat type dummy
+	ip link set dummy-nat up
+	echo 0 > /proc/sys/net/ipv4/neigh/${RTR_PRIVATE_UPLINK}/proxy_delay
+	ip route add ${RTR_PRIVATE_GATEWAY} dev ${RTR_PRIVATE_UPLINK}
+	ip route add default via ${RTR_PRIVATE_GATEWAY}
+	for IP in ${RTR_PRIVATE_NAT_ALL}; do
+		ip neigh add proxy ${IP} dev ${RTR_PRIVATE_UPLINK}
+		ip route add ${IP}/32 dev dummy-nat
+	done
+else
+	ip addr add ${NAT_PRIV_CGN_OWN} dev ${RTR_PRIVATE_UPLINK}
+	ip route add default via ${NAT_PRIV_CGN_CGN}
+fi
 
 # NAT and firewall config
 cat << EOF > /tmp/router-private-iptables.conf
@@ -55,9 +60,16 @@ COMMIT
 #
 EOF
 iptables-restore < /tmp/router-private-iptables.conf
-for IP in ${RTR_PRIVATE_NAT_ALL}; do
-	iptables -A FORWARD -m state --state NEW -d ${IP} -j DROP
-done
+
+if [ x"$NAT_EXTERNAL" != x"yes" ]; then
+	for IP in ${RTR_PRIVATE_NAT_ALL}; do
+		iptables -A FORWARD -m state --state NEW -d ${IP} -j DROP
+	done
+else
+	# If NAT is external, don't do conntrack
+	iptables -t raw -I PREROUTING -j NOTRACK
+	ip6tables -t raw -I PREROUTING -j NOTRACK
+fi
 
 ip6tables -A INPUT   -p icmpv6 --icmpv6-type router-solicitation  -m frag -j DROP
 ip6tables -A INPUT   -p icmpv6 --icmpv6-type router-advertisement -m frag -j DROP
