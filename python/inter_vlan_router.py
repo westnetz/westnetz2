@@ -28,7 +28,7 @@ class IntervlanRouter(object):
     def __init__(self, base_if, public):
         self.base_if = base_if
         if public:
-            self.customers = [c for c in westspec.customers if c.proxyif or c.extranets]
+            self.customers = [c for c in westspec.customers if c.proxyif or c.extranets or c.ipv6]
         else:
             self.customers = [c for c in westspec.customers if c.privnet is not None]
         self.public = public # Public Router or RFC1918 router?
