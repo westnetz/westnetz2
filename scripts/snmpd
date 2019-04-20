@@ -1,0 +1,25 @@
+#!/bin/sh
+
+set -e
+
+if [ $# -ne 1 ]; then
+	echo "Usage: $0 <namespace>" >&2
+	exit 1
+fi
+
+NAMESPACE="$1"
+
+BIND_IP="$(ip -4 -o addr list dev lo | sed -n 's_^.*inet \(.*\)/32 scope global.*$_\1_p' | sort -rn | head -n 1)"
+
+if [ -z "$BIND_IP" ]; then
+	echo "Could not determine to which IP to bind!" >&2
+	exit 1
+fi
+
+exec /usr/sbin/snmpd \
+	-f \
+	-Lsd -Lf /dev/null \
+	-u snmp -g snmp \
+	-I ifTable,ifXTable \
+	-p /run/snmpd-${NAMESPACE}.pid \
+	$BIND_IP
