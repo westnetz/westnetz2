@@ -18,7 +18,7 @@ fi
 
 exec /usr/sbin/snmpd \
 	-f \
-	-Lswd -Lf /dev/null \
+	-LSwd -Lf /dev/null \
 	-u snmp -g snmp \
 	-I ifTable,ifXTable,setSerialNo,vacm_conf \
 	-p /run/snmpd-${NAMESPACE}.pid \
