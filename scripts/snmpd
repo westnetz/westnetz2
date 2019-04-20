@@ -20,6 +20,6 @@ exec /usr/sbin/snmpd \
 	-f \
 	-Lsd -Lf /dev/null \
 	-u snmp -g snmp \
-	-I ifTable,ifXTable \
+	-I ifTable,ifXTable,setSerialNo,vacm_conf \
 	-p /run/snmpd-${NAMESPACE}.pid \
 	$BIND_IP
