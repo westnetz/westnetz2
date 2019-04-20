@@ -17,9 +17,12 @@ echo 1 > /proc/sys/net/ipv6/conf/default/disable_ipv6
 echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
 # Turn of br_netfilter, bleh
 modprobe bridge || true
-echo 0 > /proc/sys/net/bridge/bridge-nf-call-arptables
-echo 0 > /proc/sys/net/bridge/bridge-nf-call-iptables
-echo 0 > /proc/sys/net/bridge/bridge-nf-call-ip6tables
+echo 0 > /proc/sys/net/bridge/bridge-nf-call-arptables \
+	|| echo 0 > /sys/devices/virtual/net/br-int/bridge/nf_call_arptables
+echo 0 > /proc/sys/net/bridge/bridge-nf-call-iptables \
+	|| echo 0 > /sys/devices/virtual/net/br-int/bridge/nf_call_iptables
+echo 0 > /proc/sys/net/bridge/bridge-nf-call-ip6tables \
+	|| echo 0 > /sys/devices/virtual/net/br-int/bridge/nf_call_ip6tables
 
 
 ip link set ${MAIN_DEVICE} up
