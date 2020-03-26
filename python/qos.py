@@ -69,8 +69,8 @@ tc_vlan() {
 }
 
 {% for klass,info in classes|dictsort -%}
-{%  set upstream   =   info.upstream|default('21Mbit') -%}
-{%  set downstream = info.downstream|default('21Mbit') -%}
+{%  set upstream   =   info.upstream|default('41Mbit') -%}
+{%  set downstream = info.downstream|default('41Mbit') -%}
 tc_vlan ifb0 {{ klass }} {{ upstream   }} {% if info.upstream_guarantee   %} rt rate {{ info.upstream_guarantee   }} {% endif %} # up
 tc_vlan {{ main_dev }} {{ klass }} {{ downstream }} {% if info.downstream_guarantee %} rt rate {{ info.downstream_guarantee }} {% endif %} # down
 
