@@ -87,6 +87,9 @@ class Subnet6(object):
     def __init__(self, ip, dictentry):
         vid = int(dictentry['vlan'])
         self.ip = ip
+        if vid not in custdict:
+            self.customer = None
+            return
         self.customer = customer = custdict[vid]
         self.gw = dictentry.get('gw', None)
         customer.ipv6.append(self)
